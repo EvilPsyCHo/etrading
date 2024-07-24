@@ -1,0 +1,9 @@
+matplotlib
+seaborn==0.13.2
+streamlit
+optuna
+pydantic==2.7.1
+scikit-learn
+plotly
+nbformat
+openpyxl
