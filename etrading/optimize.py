@@ -39,11 +39,12 @@ def get_logger(path):
 
 api = DataAPI()
 cols = [f"p{i}" for i in range(1, 97)]
+ROOT = Path(__file__).parent.parent
 
 
 class Environment:
 
-    def __init__(self, eng_id, path, units_df, bus_load_df, sys_load_df, new_energy_df, linemap_df, studies, optimize_info):
+    def __init__(self, eng_id, path, units_df, bus_load_df, sys_load_df, new_energy_df, linemap_df, studies, optimize_info, info):
         self.eng_id = eng_id
         self.path = Path(path)
         self.units_df = units_df
@@ -54,7 +55,13 @@ class Environment:
         self.linemap_df = linemap_df
         self.studies = studies
         self.optimize_info = optimize_info
+        self.info = info
         self.logger = get_logger(path)
+    
+    @classmethod
+    def save_info(cls, info):
+        with open(ROOT / "data" / info["eng_id"] / "info.pkl", "wb") as f:
+            pickle.dump(info, f)
     
     @classmethod
     def convert_unit_dataframe_to_unit_obj(cls, units_df, new_energy_df):
@@ -64,25 +71,29 @@ class Environment:
             if unit.id in set(new_energy_df.id):
                 unit.forecast = new_energy_df.loc[new_energy_df.id == unit.id, cols].values[0].tolist()
             units.append(unit)
-        return units_df
+        return units
 
     
     @classmethod
-    def load(cls, env_dir):
-        with open(os.path.join(env_dir, "data.pkl"), "rb") as f:
+    def load(cls, eng_id):
+        with open(ROOT / "data" / eng_id / "data.pkl", "rb") as f:
             data = pickle.load(f)
-        with open(os.path.join(env_dir, "optimize_info.pkl"), "rb") as f:
+        with open(ROOT / "data" / eng_id / "optimize_info.pkl", "rb") as f:
             optimize_info = pickle.load(f)
-        with open(os.path.join(env_dir, "studies.pkl"), "rb") as f:
+        with open(ROOT / "data" / eng_id / "studies.pkl", "rb") as f:
             studies = pickle.load(f)
-        return cls(optimize_info=optimize_info, studies=studies, **data)
+        with open(ROOT / "data" / eng_id / "info.pkl", "rb") as f:
+            info = pickle.load(f)
+        return cls(info=info, optimize_info=optimize_info, studies=studies, **data)
         
 
     @classmethod
-    def create(cls, save_dir, eng_name, remark):
-        eng_id = api.create_eng(eng_name, remark)["data"]
-        api.load_eng_base_data(eng_id)
-        path = Path(save_dir) / eng_name
+    def create(cls, eng_id):
+        df = pd.DataFrame(api.get_eng_info()["data"])
+        eng_name = df[df.id == eng_id]["engName"].item()
+
+        # api.load_eng_base_data(eng_id)
+        path = ROOT / "data" / eng_id
         path.mkdir(exist_ok=True, parents=True)
         units_df = pd.DataFrame(api.get_eng_unit_info(eng_id)["data"])
         # units.to_csv(path / "units.csv", index=False)
@@ -111,7 +122,7 @@ class Environment:
                 "bus_load_df": bus_load_df,
                 "sys_load_df": sys_load_df,
                 "new_energy_df": new_energy_df,
-                "linemap_df": linemap_df,
+                "line_map_df": linemap_df,
             }
             pickle.dump(data, f)
         with open(path / "studies.pkl", "wb") as f:
@@ -120,7 +131,17 @@ class Environment:
         optimize_info = []
         with open(path / "optimize_info.pkl", "wb") as f:
             pickle.dump(optimize_info, f)
-        return cls(eng_id, str(path), units_df, units, bus_load_df, sys_load_df, new_energy_df, studies, optimize_info)
+        
+        info = {
+    "eng_id": eng_id,
+    "eng_name": eng_name,
+    "target_rounds": None,
+    "exp_rounds": 0,
+    "valid_exp_rounds": None,
+}
+        cls.save_info(info)
+
+        return cls(eng_id, str(path), units_df, units, bus_load_df, sys_load_df, new_energy_df, studies, optimize_info, info)
 
     def random_step(self, mu, bias):
         round = len(self.optimize_info)
@@ -162,7 +183,7 @@ class Environment:
 
 
         time.sleep(60 * 15)
-        self.logger.info(f"<<optimization step {round}>>  get clearing result")
+        self.logger.info(f"<<optimization step {round}>>  try to get clearing result")
         while True:
             content = api.get_eng_clearing_power_and_price(self.eng_id)
             if content["data"]:
@@ -293,11 +314,15 @@ class Environment:
         for i in range(n):
             self.step()
     
-    def random_run(self, mu=250, bias=50, n=1):
-        for i in range(n):
+    def random_run(self, target_round, mu=250, bias=50):
+        if self.info["exp_rounds"] is None:
+            self.info["exp_rounds"] = 0
+        if self.info["exp_rounds"] >= target_round:
+            return
+        self.info["target_rounds"] = target_round
+        self.save_info(self.info)
+        
+        for i in range(target_round-self.info["exp_rounds"]):
             self.random_step(mu, bias)
-
-
-if __name__ == "__main__":
-    env = Environment.create("/Users/kky/project/etrading/data/bayes-run-60-min200", "bayes-run-60-min200", "bayes-run-60-min200")
-    env.run(40)
+            self.info["exp_rounds"] = self.info["exp_rounds"] + 1
+            self.save_info(self.info)

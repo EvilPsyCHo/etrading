@@ -32,7 +32,7 @@ def load_eng_info(path):
     
     try:
         # line_map_df = data["line_map_df"]
-        line_map_df = pd.read_csv("/home/kky/project/etrading/assets/mapping.csv")
+        line_map_df = pd.read_csv(ROOT / "assets" / "mapping.csv")
         for col in line_map_df.columns:
             line_map_df[col] = line_map_df[col].astype(str)
     except:

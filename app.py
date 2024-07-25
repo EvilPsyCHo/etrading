@@ -9,7 +9,7 @@ import random
 import matplotlib.font_manager as fm
 import plotly.graph_objects as go
 from pathlib import Path
-
+import json
 from etrading.api import DataAPI
 
 
@@ -26,16 +26,32 @@ fm.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_prop.get_name()
 cols = [f"p{i}" for i in range(1, 97)]
 api = DataAPI()
-
+ROOT = Path(__file__).parent
+try:
+    res = api.test()
+    if json.loads(res.content)["status"] == 200:
+        st.markdown("连接后台数据库与模拟交易接口成功")
+    else:
+        st.markdown("连接后台数据库与模拟交易接口失败，部分功能无法使用，请排查。")
+except:
+    st.markdown("连接后台数据库与模拟交易接口失败，部分功能无法使用，请排查。")
 ##### Initialization
 
-def get_analysis_eng_ids():
-    eng_ids = [subdir.stem for subdir in Path("./output").iterdir() if subdir.is_dir()]
-    return eng_ids
-st.session_state["analysis_eng_id"] = st.selectbox("模拟试验分析", options=get_analysis_eng_ids(), index=0)
-with open(f"./output/{st.session_state['analysis_eng_id']}/data.pkl", "rb") as f:
+def load_simulation_info(data_dir):
+    infos = []
+    for info_path in Path(data_dir).rglob("info.pkl"):
+        with open(info_path, "rb") as f:
+            info = pickle.load(f)
+        infos.append(info)
+    infos = pd.DataFrame(infos)
+    return infos
+
+infos = load_simulation_info(ROOT / "data")
+valid_infos = infos[infos.valid_exp_rounds > 5]
+st.session_state["analysis_eng_id"] = st.selectbox("选择模拟试验（仅显示有效试验轮次大于5次的试验）", options=valid_infos.eng_id.tolist(), index=0)
+with open(f"./data/{st.session_state['analysis_eng_id']}/process.pkl", "rb") as f:
     st.session_state["data"] = pickle.load(f)
-with open(f"./output/{st.session_state['analysis_eng_id']}/analysis.pkl", "rb") as f:
+with open(f"./data/{st.session_state['analysis_eng_id']}/analysis.pkl", "rb") as f:
     st.session_state["analysis"] = pickle.load(f)
 
 st.session_state["unittype_map"] = {"101": "火电", "201": "水电", "301": "风电", "302": "光伏"}
