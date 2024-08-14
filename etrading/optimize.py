@@ -122,7 +122,7 @@ class Environment:
                 "bus_load_df": bus_load_df,
                 "sys_load_df": sys_load_df,
                 "new_energy_df": new_energy_df,
-                "line_map_df": linemap_df,
+                "linemap_df": linemap_df,
             }
             pickle.dump(data, f)
         with open(path / "studies.pkl", "wb") as f:
@@ -141,7 +141,7 @@ class Environment:
 }
         cls.save_info(info)
 
-        return cls(eng_id, str(path), units_df, units, bus_load_df, sys_load_df, new_energy_df, studies, optimize_info, info)
+        return cls(studies=studies, optimize_info=optimize_info, info=info, **data)
 
     def random_step(self, mu, bias):
         round = len(self.optimize_info)
@@ -322,7 +322,7 @@ class Environment:
         self.info["target_rounds"] = target_round
         self.save_info(self.info)
         
-        for i in range(target_round-self.info["exp_rounds"]):
+        for i in range(self.info["exp_rounds"], target_round):
             self.random_step(mu, bias)
             self.info["exp_rounds"] = self.info["exp_rounds"] + 1
             self.save_info(self.info)

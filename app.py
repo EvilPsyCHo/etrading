@@ -47,7 +47,7 @@ def load_simulation_info(data_dir):
     return infos
 
 infos = load_simulation_info(ROOT / "data")
-valid_infos = infos[infos.valid_exp_rounds > 5]
+valid_infos = infos[infos.valid_exp_rounds >= 4]
 st.session_state["analysis_eng_id"] = st.selectbox("选择模拟试验（仅显示有效试验轮次大于5次的试验）", options=valid_infos.eng_id.tolist(), index=0)
 with open(f"./data/{st.session_state['analysis_eng_id']}/process.pkl", "rb") as f:
     st.session_state["data"] = pickle.load(f)

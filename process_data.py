@@ -186,10 +186,10 @@ def reduce_mem_usage(props):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp")
+    parser.add_argument("--eng_id")
     args = parser.parse_args()
 
-    eng_id, units, linemap, sysload, busload, new_energy_plan = load_eng_info(args.exp)
+    eng_id, units, linemap, sysload, busload, new_energy_plan = load_eng_info(ROOT / "data" / args.eng_id / "data.pkl")
     trade_dfs = []
     rounds = [int(f.stem.replace("round_", "")) for f in Path(args.exp).glob("round_*")]
     print(rounds)
@@ -213,8 +213,7 @@ if __name__ == "__main__":
     "new_energy_plan": new_energy_plan,
 }
 
-    save_path = ROOT / "output" / eng_id
+    save_path = ROOT / "data" / eng_id
     save_path.mkdir(exist_ok=True, parents=True)
-    print(f"save path {save_path / 'data.pkl'}")
-    with open(save_path / "data.pkl", "wb") as f:
+    with open(save_path / "process.pkl", "wb") as f:
         pickle.dump(data, f)

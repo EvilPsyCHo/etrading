@@ -14,7 +14,7 @@ from sklearn.linear_model import BayesianRidge, LinearRegression
 import time
 from etrading.api import DataAPI
 import json
-
+import subprocess
 
 
 api = DataAPI()
@@ -26,11 +26,10 @@ simulate_target_round = st.number_input(label="模拟次数（建议20次以上�
 simulate_min = st.number_input(label="报价区间（下限）", min_value=1, max_value=500, value=200)
 simulate_max = st.number_input(label="报价区间（上限）", min_value=1, max_value=500, value=300)
 if st.button("模拟试验"):
-    with st.spinner("启动中..."):
+    with st.spinner("模拟试验启动中..."):
         try:
             res = api.test()
             assert json.loads(res.content)["status"] == 200
-            import subprocess
             process = subprocess.Popen([
             "python", "simulate.py",
             "--id", simulate_eng_id,
@@ -44,9 +43,27 @@ if st.button("模拟试验"):
                 estimate_time = simulate_target_round
                 st.write(f"模拟试验启动成功，预计耗时{simulate_target_round}小时")
             else:
-                st.write(f"模拟试验启动失败，请检查后台日志")
+                st.write(f"模拟试验启动失败，请检查工程ID是否正确输入，或检查后台日志")
         except:
             st.write(f"无法连接数据库及交易接口，请排查。")
+
+if st.button("模型训练"):
+    with st.spinner("模型训练启动中..."):
+        try:
+            process = subprocess.Popen([
+            "python", "analysis.py",
+            "--eng_id", simulate_eng_id,
+        ])
+            time.sleep(5)
+            retcode = process.poll()
+            if retcode is None:
+                estimate_time = simulate_target_round
+                st.write(f"模型启动成功，预计耗时{simulate_target_round}分钟")
+            else:
+                st.write(f"模型训练启动失败，请检查工程ID是否正确输入，或检查后台日志")
+        except Exception as e:
+            st.write(f"模型训练启动失败，请检查工程ID是否正确输入，或检查后台日志")
+            st.write(e)
 
 
 def load_simulation_info(data_dir):
