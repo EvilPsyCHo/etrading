@@ -1,9 +1,9 @@
-matplotlib
+matplotlib==3.9.1
 seaborn==0.13.2
-streamlit
-optuna
+streamlit==1.36.0
+optuna==3.6.1
 pydantic==2.7.1
-scikit-learn
+scikit-learn==1.5.1
 plotly
 nbformat
-openpyxl
+openpyxl==3.1.5
