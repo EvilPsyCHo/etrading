@@ -181,41 +181,47 @@ class Environment:
                 self.logger.info(f"<<optimization step {round}>>  {content}, waiting 30 seconds and submit clearing again ...")
                 time.sleep(30)
 
-
+        start = time.time()
         time.sleep(60 * 15)
         self.logger.info(f"<<optimization step {round}>>  try to get clearing result")
         while True:
+            cost_minutes = (time.time() - start) / 60
+            if cost_minutes >= 120:
+                self.logger.info(f"<<optimization step {round}>>  2小时未收到出清结果，重新发起出清请求")
+                return "exceed time limitation"
             content = api.get_eng_clearing_power_and_price(self.eng_id)
             if content["data"]:
                 break
             else:
-                self.logger.info(f"<<optimization step {round}>>  waiting 60 seconds and get clearing again ...")
-                time.sleep(60)
+                self.logger.info(f"<<optimization step {round}>>  waiting 5 minutes and get clearing again ...")
+                time.sleep(300)
         
+        try:
+            clear_result = content["data"]
+            clear_result_df = pd.DataFrame(clear_result)
+            clear_result_df.to_csv(path / "clear_result.csv", index=False)
 
-        clear_result = content["data"]
-        clear_result_df = pd.DataFrame(clear_result)
-        clear_result_df.to_csv(path / "clear_result.csv", index=False)
+            prices_df = clear_result_df[clear_result_df.type=="电价"].reset_index(drop=True)
+            quantity_df = clear_result_df[clear_result_df.type=="电力"].reset_index(drop=True)
+            
+            max_quantity = quantity_df[cols].sum().max()
+            max_price = prices_df[cols].max().max()
+            declares_df["q"] = declares_df["end"] - declares_df["start"]
 
-        prices_df = clear_result_df[clear_result_df.type=="电价"].reset_index(drop=True)
-        quantity_df = clear_result_df[clear_result_df.type=="电力"].reset_index(drop=True)
-        
-        max_quantity = quantity_df[cols].sum().max()
-        max_price = prices_df[cols].max().max()
-        declares_df["q"] = declares_df["end"] - declares_df["start"]
+            prices_df = prices_df.merge(self.units_df.rename(columns={"id": "unitId"})[["unitId", "unitType", "unitCap"]], on="unitId", how="left")
+            quantity_df = quantity_df.merge(self.units_df.rename(columns={"id": "unitId"})[["unitId", "unitType", "unitCap"]], on="unitId", how="left")
 
-        prices_df = prices_df.merge(self.units_df.rename(columns={"id": "unitId"})[["unitId", "unitType", "unitCap"]], on="unitId", how="left")
-        quantity_df = quantity_df.merge(self.units_df.rename(columns={"id": "unitId"})[["unitId", "unitType", "unitCap"]], on="unitId", how="left")
+            thermal_avg_price = np.sum(prices_df.loc[prices_df.unitType=="101", cols].values * quantity_df.loc[quantity_df.unitType=="101", cols].values) / np.sum(quantity_df.loc[quantity_df.unitType=="101", cols].values)
+            thermal_quantity = np.sum(quantity_df.loc[quantity_df.unitType=="101", cols].values)
 
-        thermal_avg_price = np.sum(prices_df.loc[prices_df.unitType=="101", cols].values * quantity_df.loc[quantity_df.unitType=="101", cols].values) / np.sum(quantity_df.loc[quantity_df.unitType=="101", cols].values)
-        thermal_quantity = np.sum(quantity_df.loc[quantity_df.unitType=="101", cols].values)
-
-        max_prices_declare = declares_df.loc[declares_df.price <= max_price, "q"].sum()
-        self.logger.info(f"<<optimization step {round}>>  max quantity {max_quantity:.3e}, max price {max_price:.2f}, max price declaration {max_prices_declare:.2f}, thermal quantity {thermal_quantity:.3e} avg price {thermal_avg_price:.2f}")
-        self.optimize_info.append(round)
-        with open(self.path / "optimize_info.pkl", "wb") as f:
-            pickle.dump(self.optimize_info, f)
-    
+            max_prices_declare = declares_df.loc[declares_df.price <= max_price, "q"].sum()
+            self.logger.info(f"<<optimization step {round}>>  max quantity {max_quantity:.3e}, max price {max_price:.2f}, max price declaration {max_prices_declare:.2f}, thermal quantity {thermal_quantity:.3e} avg price {thermal_avg_price:.2f}")
+            self.optimize_info.append(round)
+            with open(self.path / "optimize_info.pkl", "wb") as f:
+                pickle.dump(self.optimize_info, f)
+            return "success"
+        except ValueError:
+            return "uncorrect simulation result"
 
     def step(self):
         round = len(self.optimize_info)
@@ -323,6 +329,10 @@ class Environment:
         self.save_info(self.info)
         
         for i in range(self.info["exp_rounds"], target_round):
-            self.random_step(mu, bias)
-            self.info["exp_rounds"] = self.info["exp_rounds"] + 1
-            self.save_info(self.info)
+            patient = 3
+            for _ in range(patient):
+                res = self.random_step(mu, bias)
+                if res == "success":
+                    self.info["exp_rounds"] = self.info["exp_rounds"] + 1
+                    self.save_info(self.info)
+                    break  

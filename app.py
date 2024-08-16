@@ -29,12 +29,13 @@ api = DataAPI()
 ROOT = Path(__file__).parent
 try:
     res = api.test()
+    code = json.loads(res.content)["status"]
     if json.loads(res.content)["status"] == 200:
         st.markdown("连接后台数据库与模拟交易接口成功")
     else:
-        st.markdown("连接后台数据库与模拟交易接口失败，部分功能无法使用，请排查。")
+        st.markdown(f"连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}")
 except:
-    st.markdown("连接后台数据库与模拟交易接口失败，部分功能无法使用，请排查。")
+    st.markdown("连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}")
 ##### Initialization
 
 def load_simulation_info(data_dir):

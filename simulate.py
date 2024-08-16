@@ -16,6 +16,7 @@ def load_simulation_info(data_dir):
 
 if __name__ == "__main__":
     import argparse
+    import json
     parser = argparse.ArgumentParser()
     parser.add_argument("--id")
     parser.add_argument("--target_rounds", type=int)
@@ -25,12 +26,26 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    api = DataAPI()
+
     assert args.max > args.min
     assert args.max > 0
     assert args.target_rounds >= 1
 
     ROOT = Path(__file__).parent
     infos = load_simulation_info(ROOT / "data")
+
+
+    try:
+        res = api.test()
+        code = json.loads(res.content)["status"]
+        if code == 200:
+            print("出清模拟平台连接成功")
+        else:
+            raise ConnectionError(f"连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}")
+    except Exception as e:
+        raise ConnectionError(f"连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}.\n{e}")
+
     if args.id in infos.eng_id.to_list():
         print("load existing simulation environment ..")
         env = Environment.load(args.id)
