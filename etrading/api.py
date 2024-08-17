@@ -2,11 +2,12 @@
 
 import requests
 import json
+from config import URL
 
 
 class DataAPI:
     # url = "http://89z06660x2.zicp.fun"
-    url = "http://8hc9066602.vicp.fun"
+    url = URL
 
     # def __init__(self, url=None) -> None:
     #     self.url = url or API_URL

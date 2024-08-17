@@ -22,7 +22,7 @@ ROOT = Path(__file__).parent.parent
 
 st.markdown("## 创建模拟试验")
 simulate_eng_id = st.text_input("工程ID")
-simulate_target_round = st.number_input(label="模拟次数（建议20次以上）", min_value=1, max_value=100, value=20)
+simulate_target_round = st.number_input(label="目标模拟次数（建议10次以上）", min_value=1, max_value=100, value=10)
 simulate_min = st.number_input(label="报价区间（下限）", min_value=1, max_value=500, value=200)
 simulate_max = st.number_input(label="报价区间（上限）", min_value=1, max_value=500, value=300)
 if st.button("模拟试验"):
@@ -43,12 +43,13 @@ if st.button("模拟试验"):
                 estimate_time = simulate_target_round
                 st.write(f"模拟试验启动成功，预计耗时{simulate_target_round}小时")
             else:
-                st.write(f"模拟试验启动失败，请检查工程ID是否正确输入，或检查后台日志")
+                st.write(f"模拟试验启动失败，请检查工程ID是否正确输入，目标模拟次数是否设置正确，或检查后台日志")
         except:
-            st.write(f"无法连接数据库及交易接口，请排查。")
+            st.write(f"无法连接交易出清接口，请排查。")
 
-if st.button("模型训练"):
-    with st.spinner("模型训练启动中..."):
+
+if st.button("模型训练&数据分析"):
+    with st.spinner("模型训练 & 数据分析启动中..."):
         try:
             process = subprocess.Popen([
             "python", "analysis.py",
@@ -92,7 +93,7 @@ if st.button("创建工程"):
             res = api.load_eng_base_data(eng_id)
             st.write(res)
     except:
-        st.markdown("无法连接数据库及交易接口，请排查。")
+        st.markdown("无法连接交易出清接口，请排查。")
 
 
 
@@ -101,4 +102,4 @@ try:
     eng_info = pd.DataFrame(api.get_eng_info()["data"])
     st.dataframe(eng_info[["engName", "id", "remark", "createTime"]])
 except:
-    st.markdown("无法连接数据库及交易接口，请排查。")
+    st.markdown("无法连接交易出清接口，请排查。")

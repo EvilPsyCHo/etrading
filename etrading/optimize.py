@@ -162,7 +162,6 @@ class Environment:
         nan_zero_max = declares_df[declares_df.price > 0].price.max()
         non_zero_min = declares_df[declares_df.price > 0].price.min()
         self.logger.info(f"<<optimization step {round}>>  declarations price non zero min {non_zero_min:.2f}, mean {non_zero_mean:.2f}, max {nan_zero_max:.2f}")
-
         self.logger.info(f"<<optimization step {round}>>  submit declarations")
         while True:
             content = api.create_eng_declaration(declares)
@@ -324,6 +323,9 @@ class Environment:
         if self.info["exp_rounds"] is None:
             self.info["exp_rounds"] = 0
         if self.info["exp_rounds"] >= target_round:
+            return
+        if target_round <= self.info["exp_rounds"]:
+            self.logger(f"设置的目标模拟轮次需要大于已经完成模拟轮次{self.info["exp_rounds"]}")
             return
         self.info["target_rounds"] = target_round
         self.save_info(self.info)

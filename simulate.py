@@ -55,3 +55,4 @@ if __name__ == "__main__":
     mu = (args.min + args.max) / 2
     bias = (args.max - args.min) / 4
     env.random_run(args.target_rounds, mu, bias)
+    env.logger.info("模拟试验完成")

@@ -60,3 +60,4 @@ source "$CONDA_ROOT_PREFIX/etc/profile.d/conda.sh" # otherwise conda complains a
 conda activate "$INSTALL_ENV_DIR"
 
 pip install -r requirements.txt
+streamlit run app.py
