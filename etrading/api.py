@@ -2,7 +2,7 @@
 
 import requests
 import json
-from config import URL
+from etrading.config import URL
 
 
 class DataAPI:
