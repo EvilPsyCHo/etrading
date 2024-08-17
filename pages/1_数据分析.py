@@ -41,6 +41,7 @@ def plot_daily_trade_space_vs_trade_avg_price(round):
 def plot_daily_trade_space_vs_trade_avg_price_corr_distribution():
     fig, ax = plt.subplots(figsize=(12, 6))
     print(st.session_state["analysis"].keys(), st.session_state["analysis"]["corr_space_and_avg_price"].shape)
+    print(st.session_state["analysis"]["corr_space_and_avg_price"])
     sns.kdeplot(st.session_state["analysis"]["corr_space_and_avg_price"], ax=ax, fill=True)
     plt.title("（日内）火电竞价空间与成交价格相关系数分布", size=20)
     st.pyplot(fig)
