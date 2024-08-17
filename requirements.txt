@@ -7,3 +7,4 @@ scikit-learn==1.5.1
 plotly
 nbformat
 openpyxl==3.1.5
+scipy==1.14.0

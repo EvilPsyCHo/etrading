@@ -39,11 +39,15 @@ def plot_daily_trade_space_vs_trade_avg_price(round):
 
 
 def plot_daily_trade_space_vs_trade_avg_price_corr_distribution():
+    from scipy.stats import gaussian_kde
     fig, ax = plt.subplots(figsize=(12, 6))
-    print(st.session_state["analysis"].keys(), st.session_state["analysis"]["corr_space_and_avg_price"].shape)
-    print(st.session_state["analysis"]["corr_space_and_avg_price"])
-    sns.kdeplot(st.session_state["analysis"]["corr_space_and_avg_price"].values.tolist(), ax=ax, fill=True)
-    # sns.kdeplot([1,2,3,4,2,1,1,1,2,2,2,2], ax=ax, fill=True)
+    # sns.kdeplot(st.session_state["analysis"]["corr_space_and_avg_price"].values.tolist(), ax=ax, fill=True)
+    data = st.session_state["analysis"]["corr_space_and_avg_price"].values.tolist()
+    kde = gaussian_kde(data)
+    x = np.linspace(min(0, min(data)), 1, 1000)
+    y = kde(x)
+    plt.plot(x, y)
+    plt.fill_between(x, y, alpha=0.5)
     plt.title("（日内）火电竞价空间与成交价格相关系数分布", size=20)
     st.pyplot(fig)
     plt.close(fig)
