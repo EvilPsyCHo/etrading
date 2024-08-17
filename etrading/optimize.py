@@ -181,7 +181,7 @@ class Environment:
                 time.sleep(30)
 
         start = time.time()
-        time.sleep(60 * 15)
+        time.sleep(60 * 30) # wait 30 minutes
         self.logger.info(f"<<optimization step {round}>>  try to get clearing result")
         while True:
             cost_minutes = (time.time() - start) / 60
