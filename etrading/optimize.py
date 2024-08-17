@@ -325,7 +325,7 @@ class Environment:
         if self.info["exp_rounds"] >= target_round:
             return
         if target_round <= self.info["exp_rounds"]:
-            self.logger(f"设置的目标模拟轮次需要大于已经完成模拟轮次{self.info["exp_rounds"]}")
+            self.logger(f"设置的目标模拟轮次需要大于已经完成模拟轮次{self.info['exp_rounds']}")
             return
         self.info["target_rounds"] = target_round
         self.save_info(self.info)
