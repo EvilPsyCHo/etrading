@@ -35,7 +35,7 @@ try:
     else:
         st.markdown(f"连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}")
 except:
-    st.markdown("连接“出清系统”失败，部分功能无法使用，请排查，ERROR CODE {code}")
+    st.markdown(f"连接“出清系统”失败，部分功能无法使用，请排查")
 ##### Initialization
 
 def load_simulation_info(data_dir):

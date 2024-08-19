@@ -19,5 +19,5 @@ bash install.sh
 ## 启动
 
 ```shell
-bash start.sh -a 127.0.0.1 -p 8531
+bash start.sh #-a 指定地址 127.0.0.1 或 0.0.0.0,  -p指定端口号
 ```

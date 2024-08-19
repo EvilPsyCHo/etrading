@@ -26,3 +26,4 @@ conda activate "$INSTALL_ENV_DIR"
 
 # Run Streamlit app with the specified address and port
 streamlit run app.py --server.address "$SERVER_ADDRESS" --server.port "$SERVER_PORT"
+# streamlit hello
