@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Default values for address and port
-SERVER_ADDRESS="127.0.0.1"
+SERVER_ADDRESS="0.0.0.0"
 SERVER_PORT="8501"
 
 # Parse command-line arguments
